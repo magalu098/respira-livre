@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Respira Livre — acompanhe sua jornada para parar de fumar.">
+<title>Respira Livre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="bg-orb orb-a"></div><div class="bg-orb orb-b"></div>
+
+<header class="topbar">
+  <div class="nav">
+    <a class="brand" href="#"><span class="brand-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M24.7 5.6C15.1 6.2 8.5 11.1 8.5 18.1c0 4.1 3 7.3 7.2 7.3 7.1 0 10.8-7.3 9-19.8Z"/><path d="M7.5 26.5c4.3-5.8 8.4-9.6 13.7-13.4"/></svg></span>Respira Livre</a>
+    <div class="nav-status" id="navStatus">Jornada não iniciada</div>
+  </div>
+</header>
+
+<main>
+<section class="hero reveal">
+  <div class="hero-copy">
+    <span class="eyebrow">SUA JORNADA, SEU RITMO</span>
+    <h1>Respirar melhor começa com <span>uma escolha.</span></h1>
+    <p class="lead">Acompanhe seu progresso, entenda seus gatilhos e celebre cada etapa sem transformar uma recaída em um fracasso.</p>
+
+    <div class="setup-card" id="setupCard">
+      <div class="card-title"><div><span class="mini-label">COMEÇAR</span><h2>Configure sua jornada</h2></div><div class="shield">✓</div></div>
+      <p>Esses dados são usados apenas para calcular seu progresso neste navegador.</p>
+      <div class="form-grid">
+        <label>Cigarros por dia<input type="number" id="cigarrosDia" min="1" placeholder="10"></label>
+        <label>Preço do maço<input type="number" id="precoMaco" min="0" step="0.01" placeholder="12,00"></label>
+        <label>Cigarros por maço<input type="number" id="cigarrosMaco" min="1" value="20"></label>
+      </div>
+      <button class="primary-btn" id="startBtn">Começar minha jornada <span>→</span></button>
+    </div>
+
+    <div class="active-card hidden" id="activeCard">
+      <span class="status-icon"><svg viewBox="0 0 24 24"><path d="M12 3v18M5.6 7.1l12.8 9.8M18.4 7.1 5.6 16.9"/></svg></span>
+      <div><strong>Sua jornada está ativa</strong><span>Continue no seu ritmo. Cada momento conta.</span></div>
+    </div>
+  </div>
+
+  <div class="hero-visual" aria-hidden="true">
+    <div class="visual-ring ring-one"></div><div class="visual-ring ring-two"></div>
+    <div class="breath-art"><div class="art-leaf leaf-left"></div><div class="art-leaf leaf-right"></div><div class="art-stem"></div></div>
+    <div class="floating-stat float-top"><span class="tiny-icon icon-check"></span><div><b>Progresso</b><small>Em construção</small></div></div>
+    <div class="floating-stat float-bottom"><span class="tiny-icon icon-heart"></span><div><b>Um dia de cada vez</b><small>Sem culpa. Sem pressa.</small></div></div>
+  </div>
+</section>
+
+<section class="dashboard reveal">
+  <div class="section-heading"><div><span class="eyebrow">PAINEL</span><h2>Seu progresso</h2></div><div class="live-badge"><span></span> Em tempo real</div></div>
+  <div class="time-card">
+    <div><span class="metric-label">TEMPO SEM FUMAR</span><div class="big-time" id="contadorTempo">00d 00h 00m 00s</div></div>
+    <div class="time-mark"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="18"/><path d="M24 14v11l7 4"/></svg></div>
+  </div>
+  <div class="stats-grid">
+    <article class="stat-card"><div class="stat-head"><span class="stat-symbol">D</span><span>Dias sem fumar</span></div><strong id="dias">0</strong></article>
+    <article class="stat-card"><div class="stat-head"><span class="stat-symbol">↗</span><span>Cigarros evitados</span></div><strong id="cigarros">0</strong></article>
+    <article class="stat-card"><div class="stat-head"><span class="stat-symbol">R$</span><span>Dinheiro economizado</span></div><strong id="dinheiro">R$ 0,00</strong></article>
+  </div>
+  <div class="next-goal">
+    <div class="goal-top"><div><span class="mini-label">PRÓXIMO MARCO</span><h3 id="proximaConquista">Primeiro passo</h3></div><strong id="goalText">0 / 1 dia</strong></div>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+</section>
+
+
+<section class="evolution reveal">
+  <div class="section-heading"><div><span class="eyebrow">VISÃO GERAL</span><h2>Evolução</h2></div><div class="level-pill" id="levelPill">Nível 1 · Começo</div></div>
+  <div class="evolution-grid">
+    <div class="chart-card">
+      <div class="chart-head"><div><strong>Economia acumulada</strong><span>Estimativa baseada no seu consumo</span></div><strong id="chartTotal">R$ 0,00</strong></div>
+      <div class="chart-wrap"><canvas id="progressChart" height="220"></canvas></div>
+    </div>
+    <div class="level-card">
+      <div class="level-orbit"><div class="level-number" id="levelNumber">1</div></div>
+      <span class="eyebrow">SEU NÍVEL</span><h3 id="levelName">Começo</h3>
+      <p id="levelDescription">Você deu o primeiro passo. Continue construindo sua sequência.</p>
+      <div class="level-progress"><div id="levelBar"></div></div>
+      <small id="levelProgressText">0 / 3 dias para o próximo nível</small>
+    </div>
+  </div>
+</section>
+
+<section class="calendar-section reveal">
+  <div class="section-heading"><div><span class="eyebrow">CONSTÂNCIA</span><h2>Calendário da jornada</h2></div><div class="calendar-legend"><span class="dot free"></span> Dia sem fumar</div></div>
+  <div class="calendar-card">
+    <div class="calendar-nav"><button id="prevMonth">‹</button><strong id="calendarTitle"></strong><button id="nextMonth">›</button></div>
+    <div class="weekdays"><span>DOM</span><span>SEG</span><span>TER</span><span>QUA</span><span>QUI</span><span>SEX</span><span>SÁB</span></div>
+    <div class="calendar-grid" id="calendarGrid"></div>
+  </div>
+</section>
+
+<section class="two-col reveal">
+  <div class="craving panel">
+    <span class="eyebrow">MOMENTO DIFÍCIL?</span><h2>Faça uma pausa.</h2>
+    <p>Uma vontade forte não precisa virar uma decisão. Dê a si mesmo alguns minutos antes de agir.</p>
+    <button class="secondary-btn" id="breathingBtn">Exercício de respiração <span>→</span></button>
+    <div class="breathing hidden" id="breathingBox">
+      <div class="breath-circle" id="breathCircle">Inspire</div>
+      <strong id="breathTimer">60s</strong>
+      <span id="breathMessage">Prepare-se...</span>
+      <div class="panic-actions">
+        <button class="panic-btn spotify-btn" id="panicSpotify">Abrir Spotify</button>
+        <button class="panic-btn youtube-btn" id="panicYoutube">Abrir YouTube</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="relapse panel">
+    <span class="eyebrow">SEM CULPA</span><h2>Teve uma recaída?</h2>
+    <p>Registrar o que aconteceu pode ajudar a identificar padrões e gatilhos. Uma recaída não apaga seu histórico.</p>
+    <button class="outline-btn" id="relapseBtn">Registrar recaída <span>+</span></button>
+  </div>
+</section>
+
+<section class="history reveal">
+  <div class="section-heading"><div><span class="eyebrow">APRENDER COM A JORNADA</span><h2>Histórico de recaídas</h2></div><div class="history-summary" id="historySummary">Nenhum registro</div></div>
+  <div class="history-list" id="historyList">
+    <div class="empty-history"><div class="empty-icon">+</div><strong>Seu histórico aparecerá aqui</strong><span>Registrar não é falhar. É aprender.</span></div>
+  </div>
+</section>
+
+<section class="achievements reveal">
+  <div class="section-heading"><div><span class="eyebrow">MARCOS</span><h2>Suas conquistas</h2></div></div>
+  <div class="achievement-list">
+    <article class="achievement bloqueada" id="conquista-1"><div class="achievement-icon leaf-icon"></div><div><h3>Primeiro passo</h3><p>Complete 1 dia sem fumar.</p></div><span class="lock">○</span></article>
+    <article class="achievement bloqueada" id="conquista-2"><div class="achievement-icon strength-icon"></div><div><h3>Força de vontade</h3><p>Complete 3 dias sem fumar.</p></div><span class="lock">○</span></article>
+    <article class="achievement bloqueada" id="conquista-3"><div class="achievement-icon week-icon"></div><div><h3>Uma semana</h3><p>Complete 7 dias sem fumar.</p></div><span class="lock">○</span></article>
+    <article class="achievement bloqueada" id="conquista-4"><div class="achievement-icon month-icon"></div><div><h3>Um mês livre</h3><p>Complete 30 dias sem fumar.</p></div><span class="lock">○</span></article>
+    <article class="achievement bloqueada" id="conquista-5"><div class="achievement-icon crown-icon"></div><div><h3>Grande conquista</h3><p>Complete 90 dias sem fumar.</p></div><span class="lock">○</span></article>
+  </div>
+</section>
+
+<section class="benefits reveal"><div class="benefit-art"><div></div></div><div><span class="eyebrow">UM LEMBRETE</span><h2>Seu esforço tem valor.</h2><p>Parar de fumar pode trazer benefícios importantes à saúde. Se precisar de ajuda, converse com um profissional de saúde.</p></div></section>
+</main>
+
+<div class="cookie-banner hidden" id="cookieBanner">
+  <div class="cookie-content">
+    <div>
+      <strong>Este site usa cookies</strong>
+      <p>Usamos cookies para lembrar seu tema e nome de perfil no navegador, sem enviar dados para um servidor.</p>
+    </div>
+    <div class="cookie-actions">
+      <button class="primary-btn" id="acceptCookies">Aceitar</button>
+      <button class="outline-btn" id="rejectCookies">Recusar</button>
+    </div>
+  </div>
+</div>
+
+<section class="insights reveal">
+  <div class="section-heading"><div><span class="eyebrow">INTELIGÊNCIA DA JORNADA</span><h2>O que influencia suas recaídas</h2></div></div>
+  <div class="insight-grid">
+    <div class="trigger-card">
+      <div class="insight-head"><div><strong>Gatilhos registrados</strong><span>Veja onde sua atenção pode fazer mais diferença.</span></div><div class="insight-icon">↗</div></div>
+      <div id="triggerBars" class="trigger-bars"><div class="trigger-empty">Registre uma recaída para começar a identificar padrões.</div></div>
+    </div>
+    <div class="streak-card">
+      <span class="eyebrow">SEQUÊNCIA</span>
+      <div class="streak-main"><div><span>ATUAL</span><strong id="currentStreak">0</strong><small>dias</small></div><div class="streak-divider"></div><div><span>RECORDE</span><strong id="bestStreak">0</strong><small>dias</small></div></div>
+      <p>Seu recorde não é apagado quando uma recaída acontece. Ele mostra o que você já foi capaz de construir.</p>
+    </div>
+  </div>
+</section>
+
+<section class="tools-section reveal">
+  <div class="section-heading"><div><span class="eyebrow">SEU CONTROLE</span><h2>Ferramentas</h2></div></div>
+  <div class="tools-grid">
+    <div class="tool-card"><div class="tool-icon">◷</div><div><h3>Lembretes</h3><p>Defina um horário para receber um lembrete de foco enquanto o site estiver aberto.</p></div><button class="mini-btn" id="reminderBtn">Configurar</button></div>
+    <div class="tool-card"><div class="tool-icon">↓</div><div><h3>Seus dados</h3><p>Exporte sua jornada em um arquivo PDF para guardar uma cópia.</p></div><button class="mini-btn" id="exportBtn">Exportar PDF</button></div>
+    <div class="tool-card"><div class="tool-icon">◐</div><div><h3>Aparência</h3><p>Alterne entre a aparência clara e escura mantendo a mesma identidade visual.</p></div><button class="mini-btn" id="themeBtn">Modo escuro</button></div>
+  </div>
+</section>
+
+<section class="profile-section reveal">
+  <div class="profile-card">
+    <div class="profile-identity">
+      <div class="profile-avatar" id="profileAvatar" aria-label="Foto do usuário">+</div>
+      <div>
+        <span class="eyebrow">SEU PERFIL</span>
+        <h2 id="profileGreeting">Sua jornada, do seu jeito.</h2>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="icon-btn" id="openProfileSettings" aria-label="Configurar perfil" title="Configurar perfil">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z"/><path d="m19.43 12 .04-.97-.04-.97 2.02-1.57-1.9-3.28-2.4.97a8.04 8.04 0 0 0-1.68-.97L15.1 2.7h-3.8l-.37 2.51c-.6.24-1.16.56-1.68.97l-2.4-.97-1.9 3.28 2.02 1.57-.04.97.04.97-2.02 1.57 1.9 3.28 2.4-.97c.52.41 1.08.73 1.68.97l.37 2.51h3.8l.37-2.51a8.04 8.04 0 0 0 1.68-.97l2.4.97 1.9-3.28L19.43 12Z"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<div class="modal-backdrop hidden" id="profileModal">
+  <div class="modal profile-modal">
+    <button class="modal-close" id="closeProfileModal">×</button>
+    <span class="eyebrow">PERFIL</span>
+    <h2>Configure seu perfil</h2>
+    <p>Salve seu nome uma vez e ajuste quando quiser. Também pode adicionar uma foto.</p>
+
+    <label>Nome do usuário
+      <input type="text" id="profileName" placeholder="Como você quer ser chamado?">
+    </label>
+
+    <label>Foto de perfil
+      <input type="file" id="profilePhoto" accept="image/*">
+    </label>
+
+    <button class="primary-btn full" id="saveProfile">Salvar</button>
+  </div>
+</div>
+
+<div class="modal-backdrop hidden" id="reminderModal">
+  <div class="modal">
+    <button class="modal-close" id="closeReminder">×</button><span class="eyebrow">LEMBRETE DE FOCO</span><h2>Escolha um horário</h2>
+    <p>Enquanto esta página estiver aberta, o Respira Livre mostrará um lembrete no horário escolhido.</p>
+    <label>Horário<input type="time" id="reminderTime"></label>
+    <button class="primary-btn full" id="saveReminder">Salvar lembrete</button>
+  </div>
+</div>
+
+<footer><div class="footer-brand"><span class="brand-mark small"><svg viewBox="0 0 32 32"><path d="M24.7 5.6C15.1 6.2 8.5 11.1 8.5 18.1c0 4.1 3 7.3 7.2 7.3 7.1 0 10.8-7.3 9-19.8Z"/><path d="M7.5 26.5c4.3-5.8 8.4-9.6 13.7-13.4"/></svg></span> Respira Livre</div><small>Uma ferramenta de acompanhamento — não substitui orientação médica.</small></footer>
+
+<div class="modal-backdrop hidden" id="relapseModal">
+  <div class="modal">
+    <button class="modal-close" id="closeModal">×</button>
+    <span class="eyebrow">REGISTRAR RECAÍDA</span><h2>O que aconteceu?</h2><p>Não é um julgamento. Essas informações ajudam você a entender seus gatilhos.</p>
+    <label>Quantos cigarros?<input type="number" id="relapseCount" min="1" value="1"></label>
+    <label>Qual foi o gatilho?
+      <select id="relapseTrigger"><option>Estresse</option><option>Ansiedade</option><option>Vontade</option><option>Social</option><option>Álcool</option><option>Outro</option></select>
+    </label>
+    <label>Observação <textarea id="relapseNote" rows="3" placeholder="Se quiser, escreva o que estava acontecendo..."></textarea></label>
+    <button class="primary-btn full" id="saveRelapse">Salvar registro</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="script.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}</script>
+</body>
+</html>
