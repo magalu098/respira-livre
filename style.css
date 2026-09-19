@@ -52,6 +52,10 @@ body.dark {
   --cream: #d8eee7;
   --shadow: rgba(18, 35, 31, 0.12);
   --white: #102b2a;
+  background:
+    radial-gradient(circle at 10% 8%, rgba(127, 215, 181, 0.06), transparent 28rem),
+    radial-gradient(circle at 92% 18%, rgba(169, 185, 178, 0.08), transparent 32rem),
+    linear-gradient(145deg, #ffffff 0%, #f7faf8 54%, #eef3f0 100%);
 }
 
 img,
@@ -153,6 +157,10 @@ textarea:focus-visible {
   filter: blur(12px);
   opacity: 0.9;
   pointer-events: none;
+}
+
+body.dark .bg-orb {
+  opacity: 0.35;
 }
 
 .orb-a {
@@ -1130,6 +1138,38 @@ canvas {
   padding: 18px;
 }
 
+.history-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.history-item:last-child {
+  border-bottom: 0;
+}
+
+.history-item strong,
+.history-item span,
+.history-item p {
+  display: block;
+}
+
+.history-item strong {
+  color: var(--white);
+  font-size: 1.05rem;
+}
+
+.history-item span,
+.history-item p {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.history-item p {
+  margin: 8px 0 0;
+}
+
 .empty-history {
   display: grid;
   place-items: center;
@@ -1729,4 +1769,14 @@ body.dark select,
 body.dark textarea {
   background: rgba(10, 21, 20, 0.05);
   color: var(--white);
+}
+
+/* O tema claro precisa ser branco mesmo, sem herdar o fundo verde do tema escuro. */
+body.dark {
+  background-color: #ffffff !important;
+  background-image: linear-gradient(145deg, #ffffff 0%, #fbfdfc 54%, #f1f5f2 100%) !important;
+}
+
+body.dark .bg-orb {
+  display: none;
 }
