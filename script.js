@@ -6,6 +6,36 @@ function $(id) {
     return document.getElementById(id);
 }
 
+let installPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    const button = $("installBtn");
+    if (button) button.hidden = false;
+});
+
+window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    const button = $("installBtn");
+    if (button) button.hidden = true;
+    showToast("Respira Livre instalado no dispositivo.");
+});
+
+function installApp() {
+    if (!installPrompt) {
+        showToast("No celular, use o menu do navegador e escolha 'Adicionar à tela inicial'.");
+        return;
+    }
+
+    installPrompt.prompt();
+    installPrompt.userChoice.finally(() => {
+        installPrompt = null;
+        const button = $("installBtn");
+        if (button) button.hidden = true;
+    });
+}
+
 function setCookie(name, value, days = 365) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -101,6 +131,16 @@ function requestNotificationPermission() {
 
 function openPanicLink(url) {
     window.open(url, "_blank", "noopener,noreferrer");
+}
+
+function showToast(message) {
+    const toast = $("toast");
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.classList.add("visible");
+    clearTimeout(window.toastTimer);
+    window.toastTimer = setTimeout(() => toast.classList.remove("visible"), 3200);
 }
 
 function startBreathingExercise() {
@@ -328,14 +368,8 @@ function renderCalendar(monthDate = new Date()) {
     const today = new Date();
     const monthDays = getMonthMatrix(monthDate);
 
-    const journeyStart = (() => {
-        const saved = localStorage.getItem("journeyStartDate");
-        if (saved) return new Date(saved);
-        const base = new Date();
-        base.setHours(0, 0, 0, 0);
-        localStorage.setItem("journeyStartDate", base.toISOString());
-        return base;
-    })();
+    const savedStart = localStorage.getItem("journeyStartDate");
+    const journeyStart = savedStart ? new Date(savedStart) : null;
 
     grid.innerHTML = "";
 
@@ -352,13 +386,180 @@ function renderCalendar(monthDate = new Date()) {
 
         const isToday = day.toDateString() === today.toDateString();
         const isInMonth = day.getMonth() === currentMonth && day.getFullYear() === currentYear;
-        const isMilestone = day >= journeyStart && day <= today && isInMonth;
+        const isMilestone = journeyStart && day >= journeyStart && day <= today && isInMonth;
 
         if (isToday) cell.classList.add("today");
         if (isMilestone) cell.classList.add("free");
 
         grid.appendChild(cell);
     });
+}
+
+function updateJourney() {
+    const startValue = localStorage.getItem("journeyStartDate");
+    if (!startValue) return;
+
+    const start = new Date(startValue);
+    const now = new Date();
+    const elapsedMs = Math.max(0, now - start);
+    const totalSeconds = Math.floor(elapsedMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const format = (value) => String(value).padStart(2, "0");
+
+    const cigarettesPerDay = Number(localStorage.getItem("cigarettesPerDay") || 0);
+    const packPrice = Number(localStorage.getItem("packPrice") || 0);
+    const cigarettesPerPack = Number(localStorage.getItem("cigarettesPerPack") || 20);
+    const avoided = Math.floor((totalSeconds / 86400) * cigarettesPerDay);
+    const savedMoney = (avoided / cigarettesPerPack) * packPrice;
+
+    if ($("contadorTempo")) {
+        $("contadorTempo").textContent = `${format(days)}d ${format(hours)}h ${format(minutes)}m ${format(seconds)}s`;
+    }
+    if ($("dias")) $("dias").textContent = String(days);
+    if ($("cigarros")) $("cigarros").textContent = String(avoided);
+    if ($("dinheiro")) {
+        $("dinheiro").textContent = savedMoney.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
+    }
+
+    const bestStreak = Math.max(Number(localStorage.getItem("bestStreak") || 0), days);
+    localStorage.setItem("currentStreak", String(days));
+    localStorage.setItem("bestStreak", String(bestStreak));
+    if ($("currentStreak")) $("currentStreak").textContent = String(days);
+    if ($("bestStreak")) $("bestStreak").textContent = String(bestStreak);
+
+    const goalDays = days < 1 ? 1 : days < 3 ? 3 : days < 7 ? 7 : days < 30 ? 30 : 90;
+    const previousGoal = goalDays === 1 ? 0 : goalDays === 3 ? 1 : goalDays === 7 ? 3 : goalDays === 30 ? 7 : 30;
+    const progress = Math.min(100, ((days - previousGoal) / Math.max(1, goalDays - previousGoal)) * 100);
+    if ($("goalText")) $("goalText").textContent = `${days} / ${goalDays} dias`;
+    if ($("progressBar")) $("progressBar").style.width = `${Math.max(0, progress)}%`;
+    if ($("proximaConquista")) {
+        const labels = { 1: "Primeiro passo", 3: "Força de vontade", 7: "Uma semana", 30: "Um mês livre", 90: "Grande conquista" };
+        $("proximaConquista").textContent = labels[goalDays];
+    }
+
+    renderProgressChart();
+}
+
+function startJourney() {
+    const cigarettesPerDay = Number($("cigarrosDia")?.value || 0);
+    const packPrice = Number($("precoMaco")?.value || 0);
+    const cigarettesPerPack = Number($("cigarrosMaco")?.value || 20);
+
+    if (!cigarettesPerDay || cigarettesPerDay < 1 || cigarettesPerPack < 1) {
+        showToast("Preencha os cigarros por dia e por maço para começar.");
+        return;
+    }
+
+    localStorage.setItem("cigarettesPerDay", String(cigarettesPerDay));
+    localStorage.setItem("packPrice", String(packPrice));
+    localStorage.setItem("cigarettesPerPack", String(cigarettesPerPack));
+    localStorage.setItem("journeyStartDate", new Date().toISOString());
+
+    $("setupCard")?.classList.add("hidden");
+    $("activeCard")?.classList.remove("hidden");
+    updateJourney();
+    renderCalendar(new Date());
+
+    clearInterval(window.journeyTimer);
+    window.journeyTimer = setInterval(updateJourney, 1000);
+}
+
+function renderRelapseHistory() {
+    const list = $("historyList");
+    const summary = $("historySummary");
+    const history = JSON.parse(localStorage.getItem("relapses") || "[]");
+    if (!list) return;
+
+    if (summary) {
+        summary.textContent = history.length ? `${history.length} registro${history.length === 1 ? "" : "s"}` : "Nenhum registro";
+    }
+
+    if (!history.length) {
+        list.innerHTML = `<div class="empty-history"><div class="empty-icon">+</div><strong>Seu histórico aparecerá aqui</strong><span>Registrar não é falhar. É aprender.</span></div>`;
+        return;
+    }
+
+    const escapeHtml = (value) => String(value).replace(/[&<>'"]/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;"
+    }[character]));
+
+    list.innerHTML = history.map((item) => `
+        <article class="history-item">
+            <div>
+                <strong>${escapeHtml(item.trigger)}</strong>
+                <span>${escapeHtml(item.date)} · ${escapeHtml(item.count)} cigarro${item.count === 1 ? "" : "s"}</span>
+                ${item.note ? `<p>${escapeHtml(item.note)}</p>` : ""}
+            </div>
+        </article>
+    `).join("");
+}
+
+function saveRelapse() {
+    const count = Math.max(1, Number($("relapseCount")?.value || 1));
+    const trigger = $("relapseTrigger")?.value || "Outro";
+    const note = $("relapseNote")?.value?.trim() || "";
+    const history = JSON.parse(localStorage.getItem("relapses") || "[]");
+
+    history.unshift({
+        count,
+        trigger,
+        note,
+        date: new Date().toLocaleString("pt-BR")
+    });
+    localStorage.setItem("relapses", JSON.stringify(history.slice(0, 30)));
+
+    const newStart = new Date();
+    localStorage.setItem("journeyStartDate", newStart.toISOString());
+    localStorage.setItem("currentStreak", "0");
+    $("relapseModal")?.classList.add("hidden");
+    if ($("relapseNote")) $("relapseNote").value = "";
+    renderRelapseHistory();
+    updateJourney();
+    renderCalendar(new Date());
+    showToast("Recaída registrada. Vamos recomeçar com calma.");
+}
+
+function openReminderModal() {
+    const modal = $("reminderModal");
+    if (!modal) return;
+    const savedTime = localStorage.getItem("reminderTime");
+    if (savedTime && $("reminderTime")) $("reminderTime").value = savedTime;
+    modal.classList.remove("hidden");
+}
+
+function saveReminder() {
+    const time = $("reminderTime")?.value;
+    if (!time) {
+        showToast("Escolha um horário para salvar o lembrete.");
+        return;
+    }
+
+    localStorage.setItem("reminderTime", time);
+    $("reminderModal")?.classList.add("hidden");
+    showToast(`Lembrete configurado para ${time}.`);
+}
+
+function checkReminder() {
+    const reminderTime = localStorage.getItem("reminderTime");
+    if (!reminderTime) return;
+    const now = new Date();
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const todayKey = `${now.toDateString()}-${reminderTime}`;
+    if (currentTime === reminderTime && localStorage.getItem("lastReminder") !== todayKey) {
+        localStorage.setItem("lastReminder", todayKey);
+        showNotification("Respira Livre", "Hora do seu lembrete de foco.");
+        showToast("Seu lembrete de foco chegou.");
+    }
 }
 
 function buildJourneySummary() {
@@ -592,11 +793,53 @@ if ($("exportBtn")) {
     $("exportBtn").addEventListener("click", exportJourneyPdf);
 }
 
+if ($("startBtn")) {
+    $("startBtn").addEventListener("click", startJourney);
+}
+
+if ($("installBtn")) {
+    $("installBtn").addEventListener("click", installApp);
+}
+
+if ($("relapseBtn")) {
+    $("relapseBtn").addEventListener("click", () => $("relapseModal")?.classList.remove("hidden"));
+}
+
+if ($("closeModal")) {
+    $("closeModal").addEventListener("click", () => $("relapseModal")?.classList.add("hidden"));
+}
+
+if ($("saveRelapse")) {
+    $("saveRelapse").addEventListener("click", saveRelapse);
+}
+
+if ($("reminderBtn")) {
+    $("reminderBtn").addEventListener("click", openReminderModal);
+}
+
+if ($("closeReminder")) {
+    $("closeReminder").addEventListener("click", () => $("reminderModal")?.classList.add("hidden"));
+}
+
+if ($("saveReminder")) {
+    $("saveReminder").addEventListener("click", saveReminder);
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     aplicarTema();
     mostrarBannerCookies();
     renderProgressChart();
     renderCalendar(new Date());
+    renderRelapseHistory();
+
+    const savedStart = localStorage.getItem("journeyStartDate");
+    if (savedStart) {
+        $("setupCard")?.classList.add("hidden");
+        $("activeCard")?.classList.remove("hidden");
+        updateJourney();
+        clearInterval(window.journeyTimer);
+        window.journeyTimer = setInterval(updateJourney, 1000);
+    }
 
     if ($("prevMonth")) {
         $("prevMonth").addEventListener("click", () => {
@@ -627,6 +870,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     window.addEventListener("resize", renderProgressChart);
+    window.setInterval(checkReminder, 30000);
 
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "hidden" && "Notification" in window && Notification.permission === "granted") {

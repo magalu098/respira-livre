@@ -1,4 +1,4 @@
-const CACHE = 'respira-livre-v3';
+const CACHE = 'respira-livre-v4';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

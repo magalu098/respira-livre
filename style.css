@@ -205,6 +205,41 @@ header.topbar {
   background: rgba(8, 25, 23, 0.38);
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.install-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid rgba(127, 215, 181, 0.42);
+  border-radius: 12px;
+  background: rgba(127, 215, 181, 0.12);
+  color: var(--green);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.install-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.install-btn:hover {
+  background: rgba(127, 215, 181, 0.22);
+  border-color: var(--green);
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -1672,6 +1707,27 @@ footer {
 
   .brand {
     font-size: 1.2rem;
+  }
+
+  .nav-actions {
+    gap: 6px;
+  }
+
+  .install-btn {
+    padding: 8px 10px;
+  }
+
+  .install-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .install-btn {
+    font-size: 0;
+  }
+
+  .install-btn svg {
+    margin: 0;
   }
 
   .form-grid {
